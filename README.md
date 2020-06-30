@@ -22,17 +22,19 @@ Read about why these usage rules are good rules [here](https://github.com/evancz
 ## Installation
 
 ```
-elm package install doodledood/elm-split-pane
+elm install whale9490/elm-split-pane
 ```
 
 ## Examples
 
-1. [Simple](https://doodledood.github.io/elm-split-pane/simple.html)
-2. [Nested](https://doodledood.github.io/elm-split-pane/nested.html)
-3. [Custom splitter](https://doodledood.github.io/elm-split-pane/customSplitter.html)
-4. [Adjusting to resizes](https://doodledood.github.io/elm-split-pane/adjustToResize.html)
+[Examples code](https://github.com/whale9490/elm-split-pane/tree/master/examples)
 
-[Examples code](https://github.com/doodledood/elm-split-pane/tree/master/examples)
+To run examples, clone this repo and,
+
+```
+cd examples
+elm reactor
+```
 
 ## Basic Usage
 
@@ -40,16 +42,17 @@ Use it just like any other TEA component.
 
 ```elm
 
-module Main exposing (..)
+module Simple exposing (..)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (src, style)
 import SplitPane exposing (Orientation(..), ViewConfig, createViewConfig)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    program
+    Browser.element
         { update = update
         , init = init
         , subscriptions = subscriptions
@@ -74,8 +77,8 @@ type Msg
 -- INIT
 
 
-init : ( Model, Cmd a )
-init =
+init : () -> ( Model, Cmd a )
+init _ =
     ( { pane = SplitPane.init Horizontal
       }
     , Cmd.none
@@ -100,10 +103,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
-        [ style
-            [ ( "width", "800px" )
-            , ( "height", "600px" )
-            ]
+        [ style "width" "800px"
+        , style "height" "600px"
         ]
         [ SplitPane.view viewConfig firstView secondView model.pane ]
 
@@ -133,5 +134,6 @@ secondView =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.map PaneMsg <| SplitPane.subscriptions model.pane
+
 
 ```
