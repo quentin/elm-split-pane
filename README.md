@@ -4,7 +4,7 @@ Copyright and license of the original project can be found [here](https://github
 
 # Split Pane
 
-A split pane for Elm.
+A split pane for Elm 0.19.
 
 Embed two views beside each other with a resizable splitter in between.
 
