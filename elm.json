@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "whale9490/elm-split-pane",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "summary": "Split pane for elm.",
     "repository": "https://github.com/whale9490/elm-split-pane.git",
     "license": "BSD-3-Clause",
