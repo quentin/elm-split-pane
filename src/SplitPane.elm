@@ -661,19 +661,9 @@ onMouseDown toMsg =
     Html.Events.custom "mousedown" <| D.map (\d -> { message = toMsg <| SplitterClick d, preventDefault = True, stopPropagation = False }) domInfo
 
 
-
---onWithOptions "mousedown" { preventDefault = True, stopPropagation = False } <| Json.map (toMsg << SplitterClick) domInfo
---Html.Events.custom "mousedown"
---    (Json.map2 (\a b -> { message = a, preventDefault = b.preventDefault, stopPropagation = b.stopPropagation }) (Json.map (toMsg << SplitterClick) domInfo) (succeed { preventDefault = True, stopPropagation = False }))
-
-
 onTouchStart : (Msg -> msg) -> Attribute msg
 onTouchStart toMsg =
     Html.Events.custom "touchstart" <| D.map (\d -> { message = toMsg <| SplitterClick d, preventDefault = True, stopPropagation = True }) domInfo
-
-
-
---onWithOptions "touchstart" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterClick) domInfo
 
 
 onTouchEnd : (Msg -> msg) -> Attribute msg
@@ -681,26 +671,14 @@ onTouchEnd toMsg =
     Html.Events.custom "touchend" <| D.map (\d -> { message = toMsg <| SplitterLeftAlone <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
 
 
-
---onWithOptions "touchend" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
-
-
 onTouchCancel : (Msg -> msg) -> Attribute msg
 onTouchCancel toMsg =
     Html.Events.custom "touchcancel" <| D.map (\d -> { message = toMsg <| SplitterLeftAlone <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
 
 
-
---onWithOptions "touchcancel" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
-
-
 onTouchMove : (Msg -> msg) -> Attribute msg
 onTouchMove toMsg =
     Html.Events.custom "touchmove" <| D.map (\d -> { message = toMsg <| SplitterMove <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
-
-
-
---onWithOptions "touchmove" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterMove << domInfoToPosition) domInfo
 
 
 {-| The position of the touch relative to the whole document. So if you are
