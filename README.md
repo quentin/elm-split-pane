@@ -1,3 +1,7 @@
+This project is fork of [doodledood/elm-split-pane](https://github.com/doodledood/elm-split-pane) by [doodledood](https://github.com/doodledood).
+
+Copyright and license of the original project can be found [here](https://github.com/doodledood/elm-split-pane/blob/master/LICENCE).
+
 # Split Pane
 
 A split pane for Elm.

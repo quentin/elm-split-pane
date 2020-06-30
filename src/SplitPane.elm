@@ -1,75 +1,65 @@
-module SplitPane
-    exposing
-        ( view
-        , ViewConfig
-        , createViewConfig
-        , createCustomSplitter
-        , CustomSplitter
-        , HtmlDetails
-        , State
-        , Msg
-        , Orientation(..)
-        , SizeUnit(..)
-        , subscriptions
-        , update
-        , customUpdate
-        , UpdateConfig
-        , createUpdateConfig
-        , init
-        , configureSplitter
-        , orientation
-        , draggable
-        , percentage
-        , px
-        )
+module SplitPane exposing
+    ( view, createViewConfig
+    , update, subscriptions
+    , State, init, configureSplitter, orientation, draggable
+    , percentage, px
+    , Msg, Orientation(..), SizeUnit(..), ViewConfig, UpdateConfig, CustomSplitter, HtmlDetails
+    , customUpdate, createUpdateConfig, createCustomSplitter
+    )
 
-{-|
+{-| This is a split pane view library. Can be used to split views into multiple parts with a splitter between them.
 
-This is a split pane view library. Can be used to split views into multiple parts with a splitter between them.
-
-Check out the [examples][] to see how it works.
+Check out the [examples] to see how it works.
 
 [examples]: https://github.com/doodledood/elm-split-pane/tree/master/examples
+
 
 # View
 
 @docs view, createViewConfig
 
+
 # Update
 
 @docs update, subscriptions
+
 
 # State
 
 @docs State, init, configureSplitter, orientation, draggable
 
+
 # Helpers
 
 @docs percentage, px
+
 
 # Definitions
 
 @docs Msg, Orientation, SizeUnit, ViewConfig, UpdateConfig, CustomSplitter, HtmlDetails
 
+
 # Customization
 
 @docs customUpdate, createUpdateConfig, createCustomSplitter
+
 -}
 
-import Html exposing (Html, span, div, Attribute)
-import Html.Attributes exposing (class, style)
-import Html.Events exposing (onWithOptions)
-import Mouse
-import Json.Decode as Json exposing (field, at)
-import Maybe
 import Bound
     exposing
         ( Bounded
-        , getValue
-        , updateValue
         , createBound
         , createBounded
+        , getValue
+        , updateValue
         )
+import Browser.Events
+import Html exposing (Attribute, Html, div, span)
+import Html.Attributes exposing (class, style)
+import Html.Events
+import Json.Decode as D exposing (at, field)
+import Maybe
+
 
 
 -- MODEL
@@ -147,6 +137,7 @@ draggable isDraggable (State state) =
             | dragState =
                 if isDraggable then
                     Draggable Nothing
+
                 else
                     NotDraggable
         }
@@ -155,8 +146,8 @@ draggable isDraggable (State state) =
 {-| Changes orientation of the pane.
 -}
 orientation : Orientation -> State -> State
-orientation o (State state) =
-    State { state | orientation = o }
+orientation ori (State state) =
+    State { state | orientation = ori }
 
 
 {-| Change the splitter position and limit
@@ -182,7 +173,7 @@ percentage x bound =
                 Nothing ->
                     createBound 0.0 1.0
     in
-        Percentage <| createBounded x newBound
+    Percentage <| createBounded x newBound
 
 
 {-| Creates a pixel size unit from an int
@@ -198,7 +189,7 @@ px x bound =
                 Nothing ->
                     createBound 0 9999999999
     in
-        Px <| createBounded x newBound
+    Px <| createBounded x newBound
 
 
 
@@ -208,11 +199,12 @@ px x bound =
 {-| Initialize a new model.
 
         init Horizontal
+
 -}
 init : Orientation -> State
-init orientation =
+init o =
     State
-        { orientation = orientation
+        { orientation = o
         , splitterPosition = percentage 0.5 Nothing
         , dragState = Draggable Nothing
         }
@@ -224,11 +216,11 @@ init orientation =
 
 domInfoToPosition : DOMInfo -> Position
 domInfoToPosition { x, y, touchX, touchY } =
-    case ( x, y, touchX, touchY ) of
-        ( _, _, Just posX, Just posY ) ->
+    case ( ( x, y ), ( touchX, touchY ) ) of
+        ( _, ( Just posX, Just posY ) ) ->
             { x = posX, y = posY }
 
-        ( Just posX, Just posY, _, _ ) ->
+        ( ( Just posX, Just posY ), _ ) ->
             { x = posX, y = posY }
 
         _ ->
@@ -246,7 +238,7 @@ type UpdateConfig msg
 
 
 {-| Creates the update configuration.
-    Gives you the option to respond to various things that happen.
+Gives you the option to respond to various things that happen.
 
     For example:
     - Draw a different view when the pane is resized:
@@ -256,6 +248,7 @@ type UpdateConfig msg
             , onResizeStarted Nothing
             , onResizeEnded Nothing
             }
+
 -}
 createUpdateConfig :
     { onResize : SizeUnit -> Maybe msg
@@ -283,7 +276,7 @@ update msg model =
                 msg
                 model
     in
-        updatedModel
+    updatedModel
 
 
 {-| Updates internal model using custom configuration.
@@ -325,44 +318,44 @@ customUpdate (UpdateConfig updateConfig) msg (State state) =
                 newSplitterPosition =
                     resize state.orientation state.splitterPosition step paneInfo.width paneInfo.height
             in
-                ( State
-                    { state
-                        | splitterPosition = newSplitterPosition
-                        , dragState =
-                            Draggable <|
-                                Just
-                                    { paneInfo =
-                                        { width = paneInfo.width
-                                        , height = paneInfo.height
-                                        }
-                                    , anchor =
-                                        { x = newRequestedPosition.x
-                                        , y = newRequestedPosition.y
-                                        }
+            ( State
+                { state
+                    | splitterPosition = newSplitterPosition
+                    , dragState =
+                        Draggable <|
+                            Just
+                                { paneInfo =
+                                    { width = paneInfo.width
+                                    , height = paneInfo.height
                                     }
-                    }
-                , updateConfig.onResize newSplitterPosition
-                )
+                                , anchor =
+                                    { x = newRequestedPosition.x
+                                    , y = newRequestedPosition.y
+                                    }
+                                }
+                }
+            , updateConfig.onResize newSplitterPosition
+            )
 
         _ ->
             ( State state, Nothing )
 
 
 resize : Orientation -> SizeUnit -> Position -> Int -> Int -> SizeUnit
-resize orientation splitterPosition step paneWidth paneHeight =
-    case orientation of
+resize ori splitterPosition step paneWidth paneHeight =
+    case ori of
         Horizontal ->
             case splitterPosition of
-                Px px ->
-                    Px <| updateValue (\v -> v + step.x) px
+                Px p ->
+                    Px <| updateValue (\v -> v + step.x) p
 
                 Percentage p ->
                     Percentage <| updateValue (\v -> v + toFloat step.x / toFloat paneWidth) p
 
         Vertical ->
             case splitterPosition of
-                Px px ->
-                    Px <| updateValue (\v -> v + step.y) px
+                Px p ->
+                    Px <| updateValue (\v -> v + step.y) p
 
                 Percentage p ->
                     Percentage <| updateValue (\v -> v + toFloat step.y / toFloat paneHeight) p
@@ -387,19 +380,17 @@ type CustomSplitter msg
 
 
 createDefaultSplitterDetails : Orientation -> DragState -> HtmlDetails msg
-createDefaultSplitterDetails orientation dragState =
-    case orientation of
+createDefaultSplitterDetails ori dragState =
+    case ori of
         Horizontal ->
             { attributes =
-                [ defaultHorizontalSplitterStyle dragState
-                ]
+                defaultHorizontalSplitterStyle dragState
             , children = []
             }
 
         Vertical ->
             { attributes =
-                [ defaultVerticalSplitterStyle dragState
-                ]
+                defaultVerticalSplitterStyle dragState
             , children = []
             }
 
@@ -418,6 +409,7 @@ createDefaultSplitterDetails orientation dragState =
                 , children =
                     []
                 }
+
 -}
 createCustomSplitter :
     (Msg -> msg)
@@ -475,6 +467,7 @@ createViewConfig { toMsg, customSplitter } =
         secondView : Html a
         secondView =
             img [ src "http://2.bp.blogspot.com/-pATX0YgNSFs/VP-82AQKcuI/AAAAAAAALSU/Vet9e7Qsjjw/s1600/Cat-hd-wallpapers.jpg" ] []
+
 -}
 view : ViewConfig msg -> Html msg -> Html msg -> State -> Html msg
 view (ViewConfig viewConfig) firstView secondView (State state) =
@@ -482,22 +475,20 @@ view (ViewConfig viewConfig) firstView secondView (State state) =
         splitter =
             getConcreteSplitter viewConfig state.orientation state.dragState
     in
-        div
-            [ class "pane-container"
-            , paneContainerStyle state.orientation
-            ]
-            [ div
-                [ class "pane-first-view"
-                , firstChildViewStyle (State state)
-                ]
-                [ firstView ]
-            , splitter
-            , div
-                [ class "pane-second-view"
-                , secondChildViewStyle (State state)
-                ]
-                [ secondView ]
-            ]
+    div
+        (class "pane-container" :: paneContainerStyle state.orientation)
+        [ div
+            (class "pane-first-view"
+                :: firstChildViewStyle (State state)
+            )
+            [ firstView ]
+        , splitter
+        , div
+            (class "pane-second-view"
+                :: secondChildViewStyle (State state)
+            )
+            [ secondView ]
+        ]
 
 
 getConcreteSplitter :
@@ -507,13 +498,13 @@ getConcreteSplitter :
     -> Orientation
     -> DragState
     -> Html msg
-getConcreteSplitter viewConfig orientation dragState =
+getConcreteSplitter viewConfig ori dragState =
     case viewConfig.splitter of
         Just (CustomSplitter splitter) ->
             splitter
 
         Nothing ->
-            case createCustomSplitter viewConfig.toMsg <| createDefaultSplitterDetails orientation dragState of
+            case createCustomSplitter viewConfig.toMsg <| createDefaultSplitterDetails ori dragState of
                 CustomSplitter defaultSplitter ->
                     defaultSplitter
 
@@ -522,151 +513,142 @@ getConcreteSplitter viewConfig orientation dragState =
 -- STYLES
 
 
-paneContainerStyle : Orientation -> Attribute a
-paneContainerStyle orientation =
-    style
-        [ ( "overflow", "hidden" )
-        , ( "display", "flex" )
-        , ( "flexDirection"
-          , case orientation of
-                Horizontal ->
-                    "row"
+paneContainerStyle : Orientation -> List (Attribute a)
+paneContainerStyle ori =
+    [ style "overflow" "hidden"
+    , style "display" "flex"
+    , style "flexDirection" <|
+        case ori of
+            Horizontal ->
+                "row"
 
-                Vertical ->
-                    "column"
-          )
-        , ( "justifyContent", "center" )
-        , ( "alignItems", "center" )
-        , ( "width", "100%" )
-        , ( "height", "100%" )
-        , ( "boxSizing", "border-box" )
-        ]
+            Vertical ->
+                "column"
+    , style "justifyContent" "center"
+    , style "alignItems" "center"
+    , style "width" "100%"
+    , style "height" "100%"
+    , style "boxSizing" "border-box"
+    ]
 
 
-firstChildViewStyle : State -> Attribute a
+firstChildViewStyle : State -> List (Attribute a)
 firstChildViewStyle (State state) =
     case state.splitterPosition of
-        Px px ->
+        Px p ->
             let
                 v =
-                    (toString <| toFloat (getValue px)) ++ "px"
+                    (Debug.toString <| toFloat (getValue p)) ++ "px"
             in
-                case state.orientation of
-                    Horizontal ->
-                        style
-                            [ ( "display", "flex" )
-                            , ( "width", v )
-                            , ( "height", "100%" )
-                            , ( "overflow", "hidden" )
-                            , ( "boxSizing", "border-box" )
-                            , ( "position", "relative" )
-                            ]
+            case state.orientation of
+                Horizontal ->
+                    [ style "display" "flex"
+                    , style "width" v
+                    , style "height" "100%"
+                    , style "overflow" "hidden"
+                    , style "boxSizing" "border-box"
+                    , style "position" "relative"
+                    ]
 
-                    Vertical ->
-                        style
-                            [ ( "display", "flex" )
-                            , ( "width", "100%" )
-                            , ( "height", v )
-                            , ( "overflow", "hidden" )
-                            , ( "boxSizing", "border-box" )
-                            , ( "position", "relative" )
-                            ]
+                Vertical ->
+                    [ style "display" "flex"
+                    , style "width" "100%"
+                    , style "height" v
+                    , style "overflow" "hidden"
+                    , style "boxSizing" "border-box"
+                    , style "position" "relative"
+                    ]
 
         Percentage p ->
             let
                 v =
-                    toString <| getValue p
+                    Debug.toString <| getValue p
             in
-                style
-                    [ ( "display", "flex" )
-                    , ( "flex", v )
-                    , ( "width", "100%" )
-                    , ( "height", "100%" )
-                    , ( "overflow", "hidden" )
-                    , ( "boxSizing", "border-box" )
-                    , ( "position", "relative" )
-                    ]
+            [ style "display" "flex"
+            , style "flex" v
+            , style "width" "100%"
+            , style "height" "100%"
+            , style "overflow" "hidden"
+            , style "boxSizing" "border-box"
+            , style "position" "relative"
+            ]
 
 
-secondChildViewStyle : State -> Attribute a
+secondChildViewStyle : State -> List (Attribute a)
 secondChildViewStyle (State state) =
     case state.splitterPosition of
         Px _ ->
-            style
-                [ ( "display", "flex" )
-                , ( "flex", "1" )
-                , ( "width", "100%" )
-                , ( "height", "100%" )
-                , ( "overflow", "hidden" )
-                , ( "boxSizing", "border-box" )
-                , ( "position", "relative" )
-                ]
+            [ style "display" "flex"
+            , style "flex" "1"
+            , style "width" "100%"
+            , style "height" "100%"
+            , style "overflow" "hidden"
+            , style "boxSizing" "border-box"
+            , style "position" "relative"
+            ]
 
         Percentage p ->
             let
                 v =
-                    toString <| 1 - getValue p
+                    Debug.toString <| 1 - getValue p
             in
-                style
-                    [ ( "display", "flex" )
-                    , ( "flex", v )
-                    , ( "width", "100%" )
-                    , ( "height", "100%" )
-                    , ( "overflow", "hidden" )
-                    , ( "boxSizing", "border-box" )
-                    , ( "position", "relative" )
-                    ]
+            [ style "display" "flex"
+            , style "flex" v
+            , style "width" "100%"
+            , style "height" "100%"
+            , style "overflow" "hidden"
+            , style "boxSizing" "border-box"
+            , style "position" "relative"
+            ]
 
 
-defaultVerticalSplitterStyle : DragState -> Attribute a
+defaultVerticalSplitterStyle : DragState -> List (Attribute a)
 defaultVerticalSplitterStyle dragState =
-    style
-        (baseDefaultSplitterStyles
-            ++ [ ( "height", "11px" )
-               , ( "width", "100%" )
-               , ( "margin", "-5px 0" )
-               , ( "borderTop", "5px solid rgba(255, 255, 255, 0)" )
-               , ( "borderBottom", "5px solid rgba(255, 255, 255, 0)" )
-               ]
-            ++ case dragState of
+    baseDefaultSplitterStyles
+        ++ [ style "height" "11px"
+           , style "width" "100%"
+           , style "margin" "-5px 0"
+           , style "borderTop" "5px solid rgba(255, 255, 255, 0)"
+           , style "borderBottom" "5px solid rgba(255, 255, 255, 0)"
+           ]
+        ++ (case dragState of
                 Draggable _ ->
-                    [ ( "cursor", "row-resize" ) ]
+                    [ style "cursor" "row-resize" ]
 
                 NotDraggable ->
                     []
-        )
+           )
 
 
-defaultHorizontalSplitterStyle : DragState -> Attribute a
+defaultHorizontalSplitterStyle : DragState -> List (Attribute a)
 defaultHorizontalSplitterStyle dragState =
-    style
-        (baseDefaultSplitterStyles
-            ++ [ ( "width", "11px" )
-               , ( "height", "100%" )
-               , ( "margin", "0 -5px" )
-               , ( "borderLeft", "5px solid rgba(255, 255, 255, 0)" )
-               , ( "borderRight", "5px solid rgba(255, 255, 255, 0)" )
-               ]
-            ++ case dragState of
+    baseDefaultSplitterStyles
+        ++ [ style "width" "11px"
+           , style "height" "100%"
+           , style "margin" "0 -5px"
+           , style "borderLeft" "5px solid rgba(255, 255, 255, 0)"
+           , style "borderRight" "5px solid rgba(255, 255, 255, 0)"
+           ]
+        ++ (case dragState of
                 Draggable _ ->
-                    [ ( "cursor", "col-resize" ) ]
+                    [ style "cursor" "col-resize" ]
 
                 NotDraggable ->
                     []
-        )
+           )
 
 
-baseDefaultSplitterStyles : List ( String, String )
+baseDefaultSplitterStyles : List (Attribute a)
 baseDefaultSplitterStyles =
-    [ ( "width", "100%" )
-    , ( "background", "#000" )
-    , ( "boxSizing", "border-box" )
-    , ( "opacity", ".2" )
-    , ( "zIndex", "1" )
-    , ( "webkitUserSelect", "none" )
-    , ( "mozUserSelect", "none" )
-    , ( "userSelect", "none" )
-    , ( "backgroundClip", "padding-box" )
+    [ style "width" "100%"
+    , style "background" "#000"
+    , style "boxSizing" "border-box"
+    , style "opacity" ".2"
+    , style "zIndex" "1"
+    , style "webkitUserSelect" "none"
+    , style "mozUserSelect" "none"
+    , style "userSelect" "none"
+    , style "backgroundClip" "padding-box"
     ]
 
 
@@ -676,32 +658,54 @@ baseDefaultSplitterStyles =
 
 onMouseDown : (Msg -> msg) -> Attribute msg
 onMouseDown toMsg =
-    onWithOptions "mousedown" { preventDefault = True, stopPropagation = False } <| Json.map (toMsg << SplitterClick) domInfo
+    Html.Events.custom "mousedown" <| D.map (\d -> { message = toMsg <| SplitterClick d, preventDefault = True, stopPropagation = False }) domInfo
+
+
+
+--onWithOptions "mousedown" { preventDefault = True, stopPropagation = False } <| Json.map (toMsg << SplitterClick) domInfo
+--Html.Events.custom "mousedown"
+--    (Json.map2 (\a b -> { message = a, preventDefault = b.preventDefault, stopPropagation = b.stopPropagation }) (Json.map (toMsg << SplitterClick) domInfo) (succeed { preventDefault = True, stopPropagation = False }))
 
 
 onTouchStart : (Msg -> msg) -> Attribute msg
 onTouchStart toMsg =
-    onWithOptions "touchstart" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterClick) domInfo
+    Html.Events.custom "touchstart" <| D.map (\d -> { message = toMsg <| SplitterClick d, preventDefault = True, stopPropagation = True }) domInfo
+
+
+
+--onWithOptions "touchstart" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterClick) domInfo
 
 
 onTouchEnd : (Msg -> msg) -> Attribute msg
 onTouchEnd toMsg =
-    onWithOptions "touchend" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
+    Html.Events.custom "touchend" <| D.map (\d -> { message = toMsg <| SplitterLeftAlone <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
+
+
+
+--onWithOptions "touchend" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
 
 
 onTouchCancel : (Msg -> msg) -> Attribute msg
 onTouchCancel toMsg =
-    onWithOptions "touchcancel" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
+    Html.Events.custom "touchcancel" <| D.map (\d -> { message = toMsg <| SplitterLeftAlone <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
+
+
+
+--onWithOptions "touchcancel" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterLeftAlone << domInfoToPosition) domInfo
 
 
 onTouchMove : (Msg -> msg) -> Attribute msg
 onTouchMove toMsg =
-    onWithOptions "touchmove" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterMove << domInfoToPosition) domInfo
+    Html.Events.custom "touchmove" <| D.map (\d -> { message = toMsg <| SplitterMove <| domInfoToPosition d, preventDefault = True, stopPropagation = True }) domInfo
+
+
+
+--onWithOptions "touchmove" { preventDefault = True, stopPropagation = True } <| Json.map (toMsg << SplitterMove << domInfoToPosition) domInfo
 
 
 {-| The position of the touch relative to the whole document. So if you are
 scrolled down a bunch, you are still getting a coordinate relative to the
-very top left corner of the *whole* document.
+very top left corner of the _whole_ document.
 -}
 type alias DOMInfo =
     { x : Maybe Int
@@ -715,15 +719,15 @@ type alias DOMInfo =
 
 {-| The decoder used to extract a `DOMInfo` from a JavaScript touch event.
 -}
-domInfo : Json.Decoder DOMInfo
+domInfo : D.Decoder DOMInfo
 domInfo =
-    Json.map6 DOMInfo
-        (Json.maybe (field "clientX" Json.int))
-        (Json.maybe (field "clientY" Json.int))
-        (Json.maybe (at [ "touches", "0", "clientX" ] Json.int))
-        (Json.maybe (at [ "touches", "0", "clientY" ] Json.int))
-        (at [ "currentTarget", "parentElement", "clientWidth" ] Json.int)
-        (at [ "currentTarget", "parentElement", "clientHeight" ] Json.int)
+    D.map6 DOMInfo
+        (D.maybe (field "clientX" D.int))
+        (D.maybe (field "clientY" D.int))
+        (D.maybe (at [ "touches", "0", "clientX" ] D.int))
+        (D.maybe (at [ "touches", "0", "clientY" ] D.int))
+        (at [ "currentTarget", "parentElement", "clientWidth" ] D.int)
+        (at [ "currentTarget", "parentElement", "clientHeight" ] D.int)
 
 
 
@@ -737,8 +741,18 @@ subscriptions (State state) =
     case state.dragState of
         Draggable (Just _) ->
             Sub.batch
-                [ Mouse.moves SplitterMove
-                , Mouse.ups SplitterLeftAlone
+                [ Browser.Events.onMouseMove <|
+                    D.map SplitterMove
+                        (D.map2 Position
+                            (D.field "pageX" D.int)
+                            (D.field "pageY" D.int)
+                        )
+                , Browser.Events.onMouseUp <|
+                    D.map SplitterLeftAlone
+                        (D.map2 Position
+                            (D.field "pageX" D.int)
+                            (D.field "pageY" D.int)
+                        )
                 ]
 
         _ ->
