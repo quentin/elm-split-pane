@@ -1,13 +1,9 @@
 {
     "type": "package",
     "name": "whale9490/elm-split-pane",
-    "version": "1.0.0",
     "summary": "Split pane for elm.",
-    "repository": "https://github.com/whale9490/elm-split-pane.git",
     "license": "BSD-3-Clause",
-    "source-directories": [
-        "src"
-    ],
+    "version": "1.0.0",
     "exposed-modules": [
         "SplitPane"
     ],
@@ -16,13 +12,7 @@
         "elm/browser": "1.0.0 <= v < 2.0.0",
         "elm/core": "1.0.0 <= v < 2.0.0",
         "elm/html": "1.0.0 <= v < 2.0.0",
-        "elm/json": "1.0.0 <= v < 2.0.0",
-        "elm/bytes": "1.0.0 <= v < 2.0.0",
-        "elm/file": "1.0.0 <= v < 2.0.0",
-        "elm/time": "1.0.0 <= v < 2.0.0",
-        "elm/url": "1.0.0 <= v < 2.0.0",
-        "elm/virtual-dom": "1.0.0 <= v < 2.0.0"
+        "elm/json": "1.0.0 <= v < 2.0.0"
     },
-    "test-dependencies": {
-    }
+    "test-dependencies": {}
 }
