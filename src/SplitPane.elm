@@ -58,6 +58,7 @@ import Html exposing (Attribute, Html, div, span)
 import Html.Attributes exposing (class, style)
 import Html.Events
 import Json.Decode as D exposing (at, field)
+import Json.Encode as E exposing (encode, float, int)
 import Maybe
 
 
@@ -538,7 +539,7 @@ firstChildViewStyle (State state) =
         Px p ->
             let
                 v =
-                    (Debug.toString <| toFloat (getValue p)) ++ "px"
+                    ((encode 0) <| int <| (getValue p)) ++ "px"
             in
             case state.orientation of
                 Horizontal ->
@@ -562,7 +563,7 @@ firstChildViewStyle (State state) =
         Percentage p ->
             let
                 v =
-                    Debug.toString <| getValue p
+                    (encode 0) <| float <| getValue p
             in
             [ style "display" "flex"
             , style "flex" v
@@ -590,7 +591,7 @@ secondChildViewStyle (State state) =
         Percentage p ->
             let
                 v =
-                    Debug.toString <| 1 - getValue p
+                    (encode 0) <| float <| 1 - getValue p
             in
             [ style "display" "flex"
             , style "flex" v
